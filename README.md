@@ -1,32 +1,27 @@
-## Overview
-Achieve legacy offline Wi-Fi configuration capability on headless Raspberry Pi OS (Bookworm) using a standard wpa_supplicant.conf file.
-`configure-wifi.sh` is a script that converts a legacy `wpa_supplicant.conf` file into NetworkManager-compatible `.nmconnection` files on Raspberry Pi OS (Bookworm).  
+## **Overview**  
+Restore **offline WiFi configuration** on headless Raspberry Pi OS (Bookworm) using a standard `wpa_supplicant.conf` file.  
 
-This allows users to **pre-configure Wi-Fi networks** by placing a `wpa_supplicant.conf` file in the `/boot/` directory, similar to how it worked in previous versions of Raspberry Pi OS.
+`configure-wifi.sh` is a script that **converts legacy `wpa_supplicant.conf` files into NetworkManager-compatible `.nmconnection` files** on Raspberry Pi OS (Bookworm).  
 
-## Features
-- Converts `wpa_supplicant.conf` to NetworkManager `.nmconnection` files  
-- Supports **multiple networks**  
-- Handles SSIDs with **spaces & special characters**  
-- Supports **open & WPA-PSK networks**  
-- Automatically **reloads NetworkManager** after updating connections  
+### **Why is this needed?**  
+In previous versions of Raspberry Pi OS, you could simply drop a `wpa_supplicant.conf` file into the boot partition to configure WiFi before first boot—**a crucial feature for headless setups**. However, this functionality has been **removed** in Bookworm, and **no direct replacement exists**.  
 
----
+This script provides a stopgap solution which essentially **restores that functionality** by allowing users to **pre-configure WiFi networks** offline.  
 
-## Installation
+### **Install/How it Works**  
+- Place a `wpa_supplicant.conf` file in the `/boot/` directory of your SD card.
+- Download the script and also place it in the `/boot/` directory.
+- Modify `cmdline.txt` in the `/boot/` directory by appending `init=/boot/firmware/configure-wifi.sh` (ensure it is all on a single line).
+- Place the SD card into the Raspberry Pi and reboot.
+- On startup, the script will run and **parse wpa_supplicant.conf** and generates `.nmconnection` files for each network.  
+- **NetworkManager is restarted**, applying the new WiFi configurations automatically. 
 
-### **1. Copy the script to `/boot/`**
-Download the script and place it in the `/boot/` directory of your SD card:
+### **References**  
+- [Raspberry Pi OS Bookworm - Missing WiFi Configuration](https://github.com/raspberrypi/bookworm-feedback/issues/72)  
+- [Raspberry Pi Forums Discussion](https://forums.raspberrypi.com/viewtopic.php?t=357623)  
 
-### **2. Modify cmdline.txt to run the script on boot**
-Append the following to the end of /boot/cmdline.txt (ensure it is all on a single line):
 
-`init=/boot/firmware/configure-wifi.sh`
-
-### **3. Create a wpa_supplicant.conf file**
-Place a valid wpa_supplicant.conf file in `/boot/`.
-
-Example:
+### Example wpa_supplicant.conf file:
 ```
 country=US
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -43,10 +38,3 @@ network={
     key_mgmt=NONE
 }
 ```
-
-### **4. Replace the SD card and reboot**
-On boot, the script should execute and:
-
-- Extract networks from wpa_supplicant.conf
-- Generate .nmconnection files in /etc/NetworkManager/system-connections/
-- Restart NetworkManager to apply the changes
